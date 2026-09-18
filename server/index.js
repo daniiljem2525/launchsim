@@ -31,15 +31,21 @@ app.use((req, res, next) => {
   next();
 });
 
-// CSRF: mutations must originate from this site (browsers always send Origin on
-// cross-site POSTs; same-origin fetches send it too or we allow empty for API clients)
+// CSRF: mutations must originate from this site. Compare hostnames only —
+// behind TLS-terminating proxies (Vercel) req.protocol is http while the
+// browser's Origin is https, so full-URL comparison would reject real users.
+app.set('trust proxy', true);
 app.use('/api', (req, res, next) => {
   if (!['POST', 'PATCH', 'PUT', 'DELETE'].includes(req.method)) return next();
   const origin = req.headers.origin;
-  if (origin && origin !== `${req.protocol}://${req.get('host')}`) {
+  if (!origin) return next(); // API clients without Origin are fine
+  let originHost;
+  try { originHost = new URL(origin).host; } catch {
     return res.status(403).json({ error: { code: 'cross_origin', message: 'Cross-origin requests are not allowed.' } });
   }
-  next();
+  const host = req.headers['x-forwarded-host'] || req.get('host');
+  if (originHost === host) return next();
+  return res.status(403).json({ error: { code: 'cross_origin', message: 'Cross-origin requests are not allowed.' } });
 });
 
 // tiny structured request log
