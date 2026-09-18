@@ -91,11 +91,11 @@ function intId(v) {
   return n;
 }
 
-function ownProject(req) {
+function ownProject(req, { adminOk = false } = {}) {
   const id = intId(req.params.id);
   const p = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
   if (!p) throw new HttpError(404, 'not_found', 'Project not found.');
-  if (p.user_id !== req.user.id) throw new HttpError(403, 'forbidden', 'You can only access your own projects.');
+  if (p.user_id !== req.user.id && !(adminOk && req.user.is_admin)) throw new HttpError(403, 'forbidden', 'You can only access your own projects.');
   return p;
 }
 
@@ -344,7 +344,7 @@ api.post('/projects', requireAuth, rateLimit('create_project', 10, 60000), h(asy
 }));
 
 api.get('/projects/:id', requireAuth, h(async (req, res) => {
-  const p = ownProject(req);
+  const p = ownProject(req, { adminOk: true }); // admins can inspect any project
   res.json({ project: projectBundle(p) });
 }));
 
@@ -579,7 +579,7 @@ function clampPct(v) { return Math.max(0.001, Math.min(0.9, v)); }
 
 // ---------- REPORTS (archive) ----------
 api.get('/projects/:id/reports/:rid', requireAuth, h(async (req, res) => {
-  const p = ownProject(req);
+  const p = ownProject(req, { adminOk: true }); // admins can read any report
   const r = db.prepare('SELECT * FROM reports WHERE id = ? AND project_id = ?').get(intId(req.params.rid), p.id);
   if (!r) throw new HttpError(404, 'not_found', 'Report not found.');
   res.json({ report: { id: r.id, type: r.type, title: r.title, createdAt: r.created_at, content: JSON.parse(r.content) } });
@@ -753,6 +753,25 @@ api.post('/events', rateLimit('events', 60, 60000), h(async (req, res) => {
 }));
 
 // ---------- ADMIN ----------
+// Admin: grant or deduct credits for a user (amount may be negative).
+api.post('/admin/users/:id/credits', requireAdmin, h(async (req, res) => {
+  const uid = intId(req.params.id);
+  let amount = Math.trunc(Number(req.body?.amount));
+  if (!Number.isInteger(amount) || amount === 0 || Math.abs(amount) > 100000) {
+    throw new HttpError(400, 'validation', 'Amount must be a non-zero integer (negative to deduct).');
+  }
+  const u = db.prepare('SELECT id, credits FROM users WHERE id = ?').get(uid);
+  if (!u) throw new HttpError(404, 'not_found', 'User not found.');
+  if (amount < 0) amount = Math.max(amount, -u.credits); // never go below zero
+  db.prepare('UPDATE users SET credits = credits + ? WHERE id = ?').run(amount, uid);
+  db.prepare('INSERT INTO credit_transactions (user_id, amount, reason, project_id, created_at) VALUES (?,?,?,?,?)')
+    .run(uid, amount, req.body?.reason ? `admin: ${String(req.body.reason).slice(0, 80)}` : (amount > 0 ? 'admin: granted credits' : 'admin: deducted credits'), null, now());
+  audit(req.user.id, 'admin_credit_adjust', { targetUser: uid, amount });
+  track('admin_credit_adjust', uid, null, { amount });
+  const fresh = db.prepare('SELECT credits FROM users WHERE id = ?').get(uid);
+  res.json({ ok: true, credits: fresh.credits, amount });
+}));
+
 api.get('/admin/overview', requireAdmin, h(async (req, res) => {
   const q = (sql) => db.prepare(sql).get();
   const users = db.prepare('SELECT id, email, name, plan, credits, is_admin, created_at FROM users ORDER BY id DESC LIMIT 100').all();
@@ -775,7 +794,7 @@ api.get('/admin/overview', requireAdmin, h(async (req, res) => {
     topEvents: db.prepare(`SELECT name, COUNT(*) as c FROM events GROUP BY name ORDER BY c DESC LIMIT 12`).all(),
     users, projects, errors: errors.map((e) => ({ id: e.id, scope: e.scope, message: e.message, at: e.created_at })),
     jobs: jobs.map((j) => ({ id: j.id, project: j.project_name, status: j.status, provider: j.provider, depth: j.depth, at: j.created_at })),
-    tests: tests.map((t) => ({ id: t.id, project: t.project_name, budget: t.budget, channel: t.channel, status: t.status, isDemo: !!t.is_demo })),
+    tests: tests.map((t) => ({ id: t.id, projectId: t.project_id, project: t.project_name, budget: t.budget, channel: t.channel, status: t.status, isDemo: !!t.is_demo })),
   });
 }));
 

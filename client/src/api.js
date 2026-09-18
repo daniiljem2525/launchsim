@@ -53,6 +53,7 @@ export const api = {
 
   market: () => request('/market'),
   admin: () => request('/admin/overview'),
+  adminAdjustCredits: (userId, amount) => request(`/admin/users/${userId}/credits`, { method: 'POST', body: { amount } }),
   event: (name, projectId, meta) => request('/events', { method: 'POST', body: { name, projectId, meta } }),
 };
 
