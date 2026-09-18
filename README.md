@@ -88,3 +88,18 @@ node test/e2e-api.mjs   # full user-journey API test against a running server
 ```
 
 Walked through manually in the browser as well: signup → 8-step wizard → analysis → results → improve idea → simulate again → iteration history → real test plan → demo run → simulation-vs-reality → decision; plus demo project, experiments, billing upgrade, password reset, admin panel, and mobile layout.
+
+## Deploy
+
+### Local / VPS (persistent DB — recommended for real usage)
+```bash
+npm install && npm run build && npm start   # serves app + API on :4311
+```
+
+### Vercel (serverless)
+The repo is Vercel-ready (`api/index.js` entry + `vercel.json`). Note: the serverless filesystem is ephemeral — the SQLite DB lives in `/tmp` and re-seeds on cold start, so data does not persist between invocations. Fine for demos; use the local/VPS mode (or swap `node:sqlite` for a hosted DB) for production.
+
+1. Push this repo to GitHub.
+2. vercel.com → Add New Project → Import the repo → Deploy (framework auto-detected; build + rewrites come from `vercel.json`).
+
+Or via CLI: `npx vercel login` → `npx vercel --prod`.
