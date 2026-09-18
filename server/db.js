@@ -1,17 +1,78 @@
-import { DatabaseSync } from 'node:sqlite';
+// LaunchSim database layer.
+//
+// Two modes, identical synchronous API (prepare().run/.get/.all, exec):
+// 1. Default: node:sqlite on a local file (./data or /tmp on serverless).
+// 2. Persistent serverless mode (Vercel): better-sqlite3 + Vercel Blob.
+//    When BLOB_READ_WRITE_TOKEN is set, the DB file is restored from Blob at
+//    cold start and every write re-uploads it — so accounts/projects survive
+//    serverless restarts. Best-effort for demo scale: concurrent instances
+//    resolve last-write-wins.
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// Local: persistent ./data. Serverless (Vercel): only /tmp is writable —
-// the DB is ephemeral there and re-seeds on cold start.
-const DATA_DIR = process.env.VERCEL ? '/tmp' : path.join(__dirname, '..', 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+const BLOB_KEY = 'launchsim-db.sqlite';
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 
-const db = new DatabaseSync(path.join(DATA_DIR, 'launchsim.db'));
-db.exec('PRAGMA journal_mode = WAL;');
-db.exec('PRAGMA foreign_keys = ON;');
+let db;
+let blobMode = false;
+
+if (BLOB_TOKEN) {
+  const { default: Database } = await import('better-sqlite3');
+  blobMode = true;
+  const DB_PATH = '/tmp/launchsim.db';
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+  // restore latest snapshot from Blob (cold start: /tmp is empty)
+  try {
+    const { head } = await import('@vercel/blob');
+    const meta = await head(BLOB_KEY);
+    const res = await fetch(meta.url);
+    if (res.ok) fs.writeFileSync(DB_PATH, Buffer.from(await res.arrayBuffer()));
+  } catch { /* no snapshot yet — fresh seed below */ }
+  db = new Database(DB_PATH);
+  db.exec('PRAGMA journal_mode = WAL;');
+  db.exec('PRAGMA foreign_keys = ON;');
+
+  async function uploadSnapshot() {
+    try {
+      const { put } = await import('@vercel/blob');
+      const buf = fs.readFileSync(DB_PATH);
+      await put(BLOB_KEY, buf, { access: 'public', addRandomSuffix: false, allowOverwrite: true });
+    } catch (err) {
+      console.error('[blob-upload]', err.message);
+    }
+  }
+  let uploading = false, pendingAgain = false;
+  function scheduleUpload() {
+    if (uploading) { pendingAgain = true; return; }
+    uploading = true;
+    uploadSnapshot().finally(() => {
+      uploading = false;
+      if (pendingAgain) { pendingAgain = false; scheduleUpload(); }
+    });
+  }
+  const origPrepare = db.prepare.bind(db);
+  db.prepare = (sqlText) => {
+    const stmt = origPrepare(sqlText);
+    const origRun = stmt.run.bind(stmt);
+    stmt.run = (...args) => {
+      const res = origRun(...args);
+      scheduleUpload();
+      return res;
+    };
+    return stmt;
+  };
+} else {
+  const { DatabaseSync } = await import('node:sqlite');
+  const DATA_DIR = process.env.VERCEL ? '/tmp' : path.join(__dirname, '..', 'data');
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+  db = new DatabaseSync(path.join(DATA_DIR, 'launchsim.db'));
+  db.exec('PRAGMA journal_mode = WAL;');
+  db.exec('PRAGMA foreign_keys = ON;');
+}
+
+export function dbMode() { return blobMode ? 'sqlite+blob' : 'sqlite'; }
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS users (
