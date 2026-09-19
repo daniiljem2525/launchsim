@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth.jsx';
+import { useLang, LangToggle } from '../i18n.jsx';
 
 export function Brand({ light }) {
   return (
@@ -13,12 +14,13 @@ export function Brand({ light }) {
 
 export default function TopNav() {
   const { user, logout } = useAuth();
+  const { t } = useLang();
   const nav = useNavigate();
   const links = [
-    { to: '/app', label: 'Dashboard', end: true },
-    { to: '/app/experiments', label: 'Experiments' },
-    { to: '/app/market', label: 'Market Intelligence' },
-    { to: '/app/account', label: 'Account' },
+    { to: '/app', label: t('nav.dashboard'), end: true },
+    { to: '/app/experiments', label: t('nav.experiments') },
+    { to: '/app/market', label: t('nav.market') },
+    { to: '/app/account', label: t('nav.account') },
   ];
   return (
     <header className="topnav">
@@ -29,22 +31,23 @@ export default function TopNav() {
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => 'navlink' + (isActive ? ' on' : '')}>{l.label}</NavLink>
             ))}
-            {user.isAdmin && <NavLink to="/app/admin" className={({ isActive }) => 'navlink' + (isActive ? ' on' : '')}>Admin</NavLink>}
+            {user.isAdmin && <NavLink to="/app/admin" className={({ isActive }) => 'navlink' + (isActive ? ' on' : '')}>{t('nav.admin')}</NavLink>}
           </nav>
         )}
         <div className="nav-cta">
+          <LangToggle />
           {user ? (
             <>
-              <span className="credits-pill" title="AI credits remaining">◈ {user.credits} credits</span>
-              <Link to="/app/new" className="btn btn-primary btn-sm">+ New Project</Link>
-              <button className="avatar" title={user.email + ' — sign out'} onClick={async () => { await logout(); nav('/'); }}>
+              <span className="credits-pill" title="AI credits remaining">◈ {user.credits} {t('nav.credits')}</span>
+              <Link to="/app/new" className="btn btn-primary btn-sm">{t('nav.newProject')}</Link>
+              <button className="avatar" title={user.email} onClick={async () => { await logout(); nav('/'); }}>
                 {(user.name || user.email || '?')[0].toUpperCase()}
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="btn btn-ghost btn-sm">Sign in</Link>
-              <Link to="/signup" className="btn btn-dark btn-sm">Start free</Link>
+              <Link to="/login" className="btn btn-ghost btn-sm">{t('auth.login')}</Link>
+              <Link to="/signup" className="btn btn-dark btn-sm">{t('auth.startFree')}</Link>
             </>
           )}
         </div>

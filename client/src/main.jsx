@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './styles.css';
 import { AuthProvider, useAuth } from './auth.jsx';
+import { LangProvider } from './i18n.jsx';
 import { Spinner } from './ui.jsx';
 import Landing from './pages/Landing.jsx';
 import { Login, Signup, Forgot, Reset } from './pages/Auth.jsx';
@@ -24,6 +25,7 @@ function RequireAuth({ children }) {
 function App() {
   return (
     <BrowserRouter>
+      <LangProvider>
       <AuthProvider>
         <Routes>
           <Route path="/" element={<Landing />} />
@@ -41,6 +43,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
+      </LangProvider>
     </BrowserRouter>
   );
 }
