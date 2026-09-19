@@ -36,6 +36,13 @@ const RU = {
   'w6.title': 'Целевой рынок', 'w6.hint': 'Страна или регион первого запуска.', 'w7.title': 'Бюджет на тест',
   'w7.hint': 'Сумма, которую реально потратить на первый рекламный тест.', 'w8.title': 'Что хотите проверить?',
   'w8.hint': 'Выберите всё важное — гипотезы будут расставлены по приоритетам.',
+  'set.title': 'Настройки', 'set.sub': 'Профиль, язык, пароль и выход.',
+  'set.profile': 'Профиль', 'set.email': 'Электронная почта', 'set.save': 'Сохранить', 'set.saved': 'Профиль обновлён.',
+  'set.language': 'Язык интерфейса', 'set.languageHint': 'Применяется сразу и запоминается.',
+  'set.pass': 'Смена пароля', 'set.currentPass': 'Текущий пароль', 'set.newPass': 'Новый пароль', 'set.update': 'Обновить пароль',
+  'set.passOk': 'Пароль обновлён. Используйте новый при следующем входе.', 'set.passWrong': 'Текущий пароль неверен.',
+  'set.signOut': 'Выйти из аккаунта', 'set.plan': 'Тариф и кредиты', 'set.planLink': 'Тарифы и биллинг →',
+  'set.member': 'Аккаунт создан',
 };
 const EN = {
   'nav.dashboard': 'Dashboard', 'nav.experiments': 'Experiments', 'nav.market': 'Market Intelligence',
@@ -71,6 +78,13 @@ const EN = {
   'w6.title': 'Target market', 'w6.hint': 'Country or region where you’ll launch first.', 'w7.title': 'Test budget',
   'w7.hint': 'Money you could realistically spend on a first real ad test.', 'w8.title': 'What do you want to validate?',
   'w8.hint': 'Pick everything that matters. We’ll prioritise hypotheses accordingly.',
+  'set.title': 'Settings', 'set.sub': 'Profile, language, password and sign out.',
+  'set.profile': 'Profile', 'set.email': 'Email', 'set.save': 'Save', 'set.saved': 'Profile updated.',
+  'set.language': 'Interface language', 'set.languageHint': 'Applies instantly and is remembered.',
+  'set.pass': 'Change password', 'set.currentPass': 'Current password', 'set.newPass': 'New password', 'set.update': 'Update password',
+  'set.passOk': 'Password updated. Use the new one next time you sign in.', 'set.passWrong': 'Current password is incorrect.',
+  'set.signOut': 'Sign out', 'set.plan': 'Plan & credits', 'set.planLink': 'Plans & billing →',
+  'set.member': 'Member since',
 };
 const DICT = { ru: RU, en: EN };
 

@@ -281,6 +281,20 @@ api.post('/auth/reset', h(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// Authenticated password change (user settings).
+api.post('/auth/change-password', requireAuth, h(async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!validPassword(newPassword)) throw new HttpError(400, 'validation', 'New password must be at least 8 characters.');
+  const u = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+  if (!u) throw new HttpError(404, 'not_found', 'User not found.');
+  if (u.password_hash && !verifyPassword(currentPassword || '', u.password_hash)) {
+    throw new HttpError(401, 'bad_credentials', 'Current password is incorrect.');
+  }
+  db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(newPassword), u.id);
+  audit(u.id, 'password_changed');
+  res.json({ ok: true });
+}));
+
 api.get('/auth/google', h(async (req, res) => {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     return res.status(501).json({ error: { code: 'google_not_configured', message: 'Google sign-in is not configured in this environment. Use email & password instead.' } });

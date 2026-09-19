@@ -29,6 +29,7 @@ export const api = {
   updateMe: (body) => request('/auth/me', { method: 'PATCH', body }),
   forgot: (body) => request('/auth/forgot', { method: 'POST', body }),
   reset: (body) => request('/auth/reset', { method: 'POST', body }),
+  changePassword: (body) => request('/auth/change-password', { method: 'POST', body }),
 
   projects: () => request('/projects'),
   project: (id) => request(`/projects/${id}`),

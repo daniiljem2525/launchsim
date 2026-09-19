@@ -40,7 +40,7 @@ export default function TopNav() {
             <>
               <span className="credits-pill" title="AI credits remaining">◈ {user.credits} {t('nav.credits')}</span>
               <Link to="/app/new" className="btn btn-primary btn-sm">{t('nav.newProject')}</Link>
-              <button className="avatar" title={user.email} onClick={async () => { await logout(); nav('/'); }}>
+              <button className="avatar" title={(t('set.title'))} onClick={() => nav('/app/settings')}>
                 {(user.name || user.email || '?')[0].toUpperCase()}
               </button>
             </>

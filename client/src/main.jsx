@@ -14,6 +14,7 @@ import Experiments from './pages/Experiments.jsx';
 import Market from './pages/Market.jsx';
 import Account from './pages/Account.jsx';
 import Admin from './pages/Admin.jsx';
+import Settings from './pages/Settings.jsx';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -39,6 +40,7 @@ function App() {
           <Route path="/app/experiments" element={<RequireAuth><Experiments /></RequireAuth>} />
           <Route path="/app/market" element={<RequireAuth><Market /></RequireAuth>} />
           <Route path="/app/account" element={<RequireAuth><Account /></RequireAuth>} />
+          <Route path="/app/settings" element={<RequireAuth><Settings /></RequireAuth>} />
           <Route path="/app/admin" element={<RequireAuth><Admin /></RequireAuth>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
