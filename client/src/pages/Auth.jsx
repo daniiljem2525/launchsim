@@ -21,6 +21,7 @@ function Shell({ title, sub, children }) {
 }
 
 const GoogleBtn = () => {
+  const { t } = useLang();
   const [msg, setMsg] = useState('');
   const tryGoogle = async () => {
     try {
