@@ -182,42 +182,6 @@ export default function Landing() {
         </section>
       </div>
 
-      {/* EXAMPLE RESULT — right after hero */}
-        <section className="landing-section" style={{ paddingTop: 56 }}>
-          <div className="container">
-            <div className="grid grid-side" style={{ alignItems: 'center', gap: 40 }}>
-              <div>
-                <div className="kicker">{t.resultTitle}</div>
-                <p className="section-sub">{t.resultNote}</p>
-                <div className="mt-24">
-                  <div className="row mb-8"><span className="dot-check">✓</span><span className="small">{t.result.audienceLabel}: <b>{t.result.audience}</b></span></div>
-                  <div className="row mb-8"><span className="dot-check">✓</span><span className="small">{t.result.priceLabel}: <b>{t.result.price}</b></span></div>
-                  <div className="row mb-8"><span className="dot-check">✓</span><span className="small">{t.result.riskLabel}: <b>{t.result.risk}</b></span></div>
-                  <div className="row"><span className="dot-check">✓</span><span className="small">{t.result.stepLabel}: <b>{t.result.step}</b></span></div>
-                </div>
-              </div>
-              <div className="card-dark">
-                <div className="spread">
-                  <div className="tiny" style={{ color: '#a1a1aa', letterSpacing: '.1em' }}>LAUNCH SCORE</div>
-                  <div className="tiny" style={{ color: '#52525b' }}>example · не реальные данные</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 8 }}>
-                  <span style={{ fontSize: 52, fontWeight: 700, letterSpacing: '-0.03em' }}>78</span>
-                  <span style={{ color: '#52525b', fontSize: 15 }}>/ 100</span>
-                  <span className="badge badge-test">TEST</span>
-                </div>
-                <hr style={{ border: 0, borderTop: '1px solid #26262b', margin: '14px 0' }} />
-                <div className="tiny mb-8" style={{ color: '#a1a1aa' }}>{t.result.breakdown}</div>
-                {t.subScores.map(([k, v]) => (
-                  <div key={k} style={{ marginBottom: 8 }}>
-                    <div className="spread small"><span style={{ color: '#d4d4d8' }}>{k}</span><b>{v}</b></div>
-                    <div className="bar" style={{ background: '#26262b' }}><i style={{ width: v + '%', background: '#fff' }} /></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* MINI-FORM */}
         <section className="landing-section soft" style={{ padding: '48px 0' }}>
